@@ -13,3 +13,19 @@ Still understanding how the audit logic should be structured.
 
 **Plan for tomorrow:**
 Build the spend input form UI and research AI tool pricing.
+
+## Day 2 — 2026-05-22
+
+**Hours worked:** 5
+
+**What I did:**
+Built the landing page and initial spend input form. Added localStorage persistence so form state survives page refreshes.
+
+**What I learned:**
+Learned React state management and useEffect lifecycle behavior for browser storage.
+
+**Blockers / what I'm stuck on:**
+Need to figure out how to structure pricing logic cleanly for multiple vendors.
+
+**Plan for tomorrow:**
+Research pricing data and start building the audit engine logic.

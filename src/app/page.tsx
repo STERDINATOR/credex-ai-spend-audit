@@ -1,23 +1,40 @@
 "use client";
 
+import { generateAudit } from "@/lib/audit";
+import React from "react";
+
 import { useState, useEffect } from "react";
 
+interface AuditResult {
+  recommendation: string;
+  savings: number;
+  reason: string;
+}
+
 export default function Home() {
-  const [tool, setTool] = useState("");
-  const [plan, setPlan] = useState("");
-  const [monthlySpend, setMonthlySpend] = useState("");
-
-  useEffect(() => {
+  const [tool, setTool] = useState(() => {
+    if (typeof window === "undefined") return "";
     const savedData = localStorage.getItem("auditData");
-
-    if (savedData) {
-      const parsed = JSON.parse(savedData);
-
-      setTool(parsed.tool || "");
-      setPlan(parsed.plan || "");
-      setMonthlySpend(parsed.monthlySpend || "");
-    }
-  }, []);
+    if (!savedData) return "";
+    const parsed = JSON.parse(savedData);
+    return parsed.tool || "";
+  });
+  const [plan, setPlan] = useState(() => {
+    if (typeof window === "undefined") return "";
+    const savedData = localStorage.getItem("auditData");
+    if (!savedData) return "";
+    const parsed = JSON.parse(savedData);
+    return parsed.plan || "";
+  });
+  const [monthlySpend, setMonthlySpend] = useState(() => {
+    if (typeof window === "undefined") return "";
+    const savedData = localStorage.getItem("auditData");
+    if (!savedData) return "";
+    const parsed = JSON.parse(savedData);
+    return parsed.monthlySpend || "";
+  });
+  const [seats, setSeats] = useState("");
+  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
 
   useEffect(() => {
     localStorage.setItem(
@@ -45,9 +62,10 @@ export default function Home() {
         <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800">
 
           <div className="mb-4">
-            <label className="block mb-2">AI Tool</label>
+            <label htmlFor="tool" className="block mb-2">AI Tool</label>
 
             <select
+              id="tool"
               value={tool}
               onChange={(e) => setTool(e.target.value)}
               className="w-full p-3 rounded-lg bg-zinc-800"
@@ -87,11 +105,68 @@ export default function Home() {
               placeholder="200"
               className="w-full p-3 rounded-lg bg-zinc-800"
             />
+             
           </div>
+          <div className="mb-6">
+            <label className="block mb-2">
+            Number of Seats
+            </label>
 
-          <button className="w-full bg-white text-black font-semibold py-3 rounded-lg">
+            <input
+            type="number"
+            value={seats}
+            onChange={(e) => setSeats(e.target.value)}
+            placeholder="5"
+            className="w-full p-3 rounded-lg bg-zinc-800"
+            />
+            </div>
+
+          <button
+            onClick={() => {
+
+            const result = generateAudit({
+            tool,
+            plan,
+            monthlySpend: Number(monthlySpend),
+            seats: Number(seats),
+            });
+
+            setAuditResult(result);
+            }}
+
+            className="w-full bg-white text-black font-semibold py-3 rounded-lg"
+            >
             Analyze Spend
           </button>
+          {
+            auditResult && (
+
+              <div className="mt-8 bg-zinc-800 p-6 rounded-xl">
+
+                <h2 className="text-2xl font-bold mb-4">
+                  Audit Results
+                </h2>
+
+                <p className="mb-2">
+                  <span className="font-semibold">
+                    Recommendation:
+                  </span>{" "}
+                  {auditResult.recommendation}
+                </p>
+
+                <p className="mb-2">
+                  <span className="font-semibold">
+                    Estimated Savings:
+                  </span>{" "}
+                  ${auditResult.savings}/month
+                </p>
+
+                <p className="text-gray-400">
+                  {auditResult.reason}
+                </p>
+              </div>
+            )
+          }
         </div>
       </div>
     </main>
