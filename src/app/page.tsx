@@ -35,6 +35,7 @@ export default function Home() {
   });
   const [seats, setSeats] = useState("");
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
+  const [summary, setSummary] = useState("");
 
   useEffect(() => {
     localStorage.setItem(
@@ -122,51 +123,81 @@ export default function Home() {
             </div>
 
           <button
-            onClick={() => {
+            onClick={async () => {
+              const result = generateAudit({
+                tool,
+                plan,
+                monthlySpend: Number(monthlySpend),
+                seats: Number(seats),
+              });
 
-            const result = generateAudit({
-            tool,
-            plan,
-            monthlySpend: Number(monthlySpend),
-            seats: Number(seats),
-            });
+              setAuditResult(result);
 
-            setAuditResult(result);
+              const response = await fetch("/api/summary", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  tool,
+                  recommendation: result.recommendation,
+                  savings: result.savings,
+                }),
+              });
+
+              const data = await response.json();
+              setSummary(data.summary);
             }}
-
             className="w-full bg-white text-black font-semibold py-3 rounded-lg"
-            >
+          >
             Analyze Spend
           </button>
-          {
-            auditResult && (
 
-              <div className="mt-8 bg-zinc-800 p-6 rounded-xl">
-
-                <h2 className="text-2xl font-bold mb-4">
-                  Audit Results
+          {auditResult && (
+            <div className="mt-8 space-y-6">
+              <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 p-8 rounded-2xl border border-zinc-700">
+                <h2 className="text-4xl font-bold mb-2">
+                  Save ${auditResult.savings}/month
                 </h2>
-
-                <p className="mb-2">
-                  <span className="font-semibold">
-                    Recommendation:
-                  </span>{" "}
-                  {auditResult.recommendation}
-                </p>
-
-                <p className="mb-2">
-                  <span className="font-semibold">
-                    Estimated Savings:
-                  </span>{" "}
-                  ${auditResult.savings}/month
-                </p>
-
                 <p className="text-gray-400">
-                  {auditResult.reason}
+                  Estimated annual savings:
+                  <span className="text-white font-semibold">
+                    ${auditResult.savings * 12}
+                  </span>
                 </p>
               </div>
-            )
-          }
+              <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800">
+                <h3 className="text-2xl font-bold mb-4">Recommendation</h3>
+                <p className="mb-3 text-lg">{auditResult.recommendation}</p>
+                <p className="text-gray-400">{auditResult.reason}</p>
+              </div>
+            </div>
+          )}
+          
+          {summary && (
+            <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+              <h3 className="text-xl font-semibold">Summary</h3>
+              <p className="text-gray-700">{summary}</p>
+            </div>
+          )}
+          <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800">
+
+            <h3 className="text-2xl font-bold mb-4">
+              Save Your Audit
+            </h3>
+
+            <input
+              type="email"
+              placeholder="Email"
+              className="w-full p-3 rounded-lg bg-zinc-800 mb-4"
+            />
+
+            <button
+              className="w-full bg-white text-black py-3 rounded-lg"
+            >
+              Save Audit
+            </button>
+          </div>
         </div>
       </div>
     </main>
